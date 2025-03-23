@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字组合查找</title>
+</head>
+
+<body>
+    <label for="sumValue">请输入和值(15~165)：</label>
+    <input type="number" id="sumValue" value="107">
+    <label for="requiredNumbers">请输入必出数字（用逗号分隔）：</label>
+    <input type="text" id="requiredNumbers" value="02,09,20">
+    <button onclick="findCombinations()">查找组合</button>
+    <pre id="result"></pre>
+
+    <script>
+        function findCombinations() {
+            const sum = parseInt(document.getElementById('sumValue').value);
+            const requiredNumbersInput = document.getElementById('requiredNumbers').value;
+            const requiredNumbers = requiredNumbersInput.split(',')
+               .map(num => parseInt(num.trim()))
+               .filter(num =>!isNaN(num));
+
+            const resultElement = document.getElementById('result');
+            const interval1 = Array.from({ length: 12 }, (_, i) => i + 1);
+            const interval2 = Array.from({ length: 12 }, (_, i) => i + 13);
+            const interval3 = Array.from({ length: 11 }, (_, i) => i + 25);
+
+            const allValidCombinations = [];
+
+            // 生成所有满足和值条件的组合
+            for (let num1 of interval1) {
+                for (let num2 of interval2) {
+                    for (let num3 of interval3) {
+                        for (let num4 = 1; num4 <= 35; num4++) {
+                            if (num4 === num1 || num4 === num2 || num4 === num3) continue;
+                            for (let num5 = num4 + 1; num5 <= 35; num5++) {
+                                if (num5 === num1 || num5 === num2 || num5 === num3 || num5 === num4) continue;
+                                if (num1 + num2 + num3 + num4 + num5 === sum) {
+                                    allValidCombinations.push([num1, num2, num3, num4, num5]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 筛选出包含所有必出数字且每个区间至少有一个数字的组合
+            const filteredCombinations = allValidCombinations.filter(combination => {
+                // 检查是否包含所有必出数字
+                const hasRequiredNumbers = requiredNumbers.every(num => combination.includes(num));
+                if (!hasRequiredNumbers) return false;
+
+                // 检查每个区间是否至少有一个数字
+                const hasInterval1 = combination.some(num => num >= 1 && num <= 12);
+                const hasInterval2 = combination.some(num => num >= 13 && num <= 24);
+                const hasInterval3 = combination.some(num => num >= 25 && num <= 35);
+
+                return hasInterval1 && hasInterval2 && hasInterval3;
+            });
+
+            // 对每个组合内的数字进行排序
+            const sortedInner = filteredCombinations.map(comb => comb.slice().sort((a, b) => a - b));
+
+            // 去重
+            const uniqueCombinations = [];
+            const set = new Set();
+            sortedInner.forEach(comb => {
+                const key = comb.join('-');
+                if (!set.has(key)) {
+                    set.add(key);
+                    uniqueCombinations.push(comb);
+                }
+            });
+
+            // 对去重后的组合按字典序排序
+            const finalSortedCombinations = uniqueCombinations.sort((a, b) => {
+                for (let i = 0; i < a.length; i++) {
+                    if (a[i]!== b[i]) {
+                        return a[i] - b[i];
+                    }
+                }
+                return 0;
+            });
+
+            if (finalSortedCombinations.length > 0) {
+                let resultText = "满足三区间都至少有一个号这个条件,找到以下组合：\n";
+                finalSortedCombinations.forEach((combination, index) => {
+                    resultText += `${index + 1}. ${combination.join(', ')}\n`;
+                });
+                resultElement.textContent = resultText;
+            } else {
+                resultElement.textContent = '满足三区间都至少有一个号这个条件,未找到符合条件的组合。';
+            }
+        }
+    </script>
+</body>
+
+</html>
